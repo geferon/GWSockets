@@ -30,7 +30,7 @@ protected:
 		auto stream = ws.exchange(nullptr);
 		if (stream != nullptr)
 		{
-			delete ws;
+			delete stream;
 		}
 		ws = new websocket::stream<tcp::socket>(*ioc);
 	}

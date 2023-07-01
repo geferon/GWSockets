@@ -16,7 +16,6 @@
 #include "WebSocket.h"
 #include "SSLWebSocket.h"
 #include "Url.hpp"
-#include "UpdateChecker.h"
 
 using namespace GarrysMod::Lua;
 using tcp = boost::asio::ip::tcp;               // from <boost/asio/ip/tcp.hpp>
@@ -442,9 +441,6 @@ GMOD_MODULE_OPEN()
 	LUA->PushCFunction(socketGCFunction);
 	LUA->SetField(-2, "__gc");
 	LUA->Pop();
-
-	LUA->PushCFunction(UpdateChecker::doVersionCheck);
-	LUA->Call(0, 0);
 
 	return 1;
 }

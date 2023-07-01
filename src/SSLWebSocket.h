@@ -36,7 +36,7 @@ protected:
 		auto stream = ws.exchange(nullptr);
 		if (stream != nullptr)
 		{
-			delete ws;
+			delete stream;
 		}
 		ws = new websocket::stream<ssl::stream<tcp::socket>>(*ioc, *sslContext);
 	}

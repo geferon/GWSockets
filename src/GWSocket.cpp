@@ -11,7 +11,7 @@
 #include <boost/beast/websocket.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/asio/connect.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/asio/placeholders.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ssl/stream.hpp>

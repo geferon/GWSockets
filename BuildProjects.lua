@@ -11,7 +11,7 @@ solution "GWSockets"
 	flags { "NoPCH", "NoImportLib"}
 	optimize "On"
 	vectorextensions "SSE"
-	symbols "On"
+	symbols "Off"
 	floatingpoint "Fast"
 	editandcontinue "Off"
 	targetdir ( "out/" .. os.target() .. "/" )
@@ -21,8 +21,8 @@ solution "GWSockets"
 
 	if os.target() == "macosx" or os.target() == "linux" then
 
-		buildoptions { "-std=c++11 -fPIC" }
-		linkoptions { " -fPIC" }
+		buildoptions { "-std=c++11 -fPIC -flto" }
+		linkoptions { " -fPIC -flto" }
 
 	end
 	
@@ -45,7 +45,7 @@ solution "GWSockets"
 		links { "libcrypto", "libssl", "boost_system", "crypt32" }
 	elseif os.target() == "macosx" then
 		platform = "osx"
-		links { "ssl", "boost_system" }
+		links { "ssl", "crypto", "boost_system" }
 	elseif os.target() == "linux" then
 		platform = "linux"
 		links { "ssl", "crypto", "boost_system", "pthread", "dl" }

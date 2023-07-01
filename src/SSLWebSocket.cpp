@@ -1,6 +1,6 @@
 #include "SSLWebSocket.h"
 #include <boost/asio/placeholders.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/beast/websocket/ssl.hpp>
 
 //TODO: I hope this is good enough, however I am not fully sure
@@ -87,7 +87,8 @@ void SSLWebSocket::sslHandshakeComplete(const boost::system::error_code& ec, std
 {
 	if (!ec)
 	{
-		this->getWS()->async_handshake_ex(host, path, decorator, boost::bind(&SSLWebSocket::handshakeCompleted, this, boost::placeholders::_1));
+ 		this->getWS()->set_option(boost::beast::websocket::stream_base::decorator(decorator));
+		this->getWS()->async_handshake(host, path, boost::bind(&SSLWebSocket::handshakeCompleted, this, boost::placeholders::_1));
 	}
 	else
 	{

@@ -1,0 +1,128 @@
+name: Build
+
+on: [push]
+
+env:
+  PROJECT_GENERATOR_VERSION: 3
+
+jobs:
+  create_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/v')
+        id: create_release
+
+  build_windows:
+    needs: [create_release]
+    runs-on: windows-latest
+    env:
+      PREMAKE5_URL: https://github.com/danielga/garrysmod_common/releases/download/premake-build%2F5.0.0-beta2/premake-5.0.0-beta2-windows.zip
+      OPENSSL_URL: https://download.firedaemon.com/FireDaemon-OpenSSL/openssl-3.1.1.zip
+      BOOST32_URL: https://downloads.sourceforge.net/project/boost/boost-binaries/1.82.0/boost_1_82_0-msvc-14.3-32.exe
+      BOOST64_URL: https://downloads.sourceforge.net/project/boost/boost-binaries/1.82.0/boost_1_82_0-msvc-14.3-64.exe
+    steps:
+      - uses: actions/checkout@v3
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.1
+      - name: Build
+        run: |
+          mkdir .\openssl
+          mkdir .\lib\windows
+          mkdir .\lib64\windows
+
+          Invoke-WebRequest -uri "$env:PREMAKE5_URL" -Method "GET" -Outfile ".\premake5.zip"
+          Invoke-WebRequest -uri "$env:OPENSSL_URL" -Method "GET" -Outfile ".\openssl.zip"
+          Invoke-WebRequest -UserAgent "curl/7.81.0" -uri "$env:BOOST32_URL" -Method "GET" -Outfile ".\boost32.exe"
+          Invoke-WebRequest -UserAgent "curl/7.81.0" -uri "$env:BOOST64_URL" -Method "GET" -Outfile ".\boost64.exe"
+
+          Expand-Archive ".\premake5.zip" -DestinationPath ".\" -Force
+          Expand-Archive ".\openssl.zip" -DestinationPath ".\openssl" -Force
+          Start-Process .\boost32.exe -NoNewWindow -Wait -ArgumentList "/silent"
+          Start-Process .\boost64.exe -NoNewWindow -Wait -ArgumentList "/silent"
+
+          Move-Item -Path .\openssl\openssl-3\x86\lib\*.lib -Destination .\lib\windows
+          Move-Item -Path .\openssl\openssl-3\x64\lib\*.lib -Destination .\lib64\windows
+          Move-Item -Path C:\local\boost_*\boost -Destination .\include
+          Move-Item -Path C:\local\boost_*\lib32*\libboost_system-vc143-mt-s-x32-1_82.lib -Destination .\lib\windows\boost_system.lib
+          Move-Item -Path C:\local\boost_*\lib64*\libboost_system-vc143-mt-s-x64-1_82.lib -Destination .\lib64\windows\boost_system.lib
+
+          .\premake5 --file=BuildProjects.lua --os=windows vs2022
+
+          Move-Item -Path .\openssl\openssl-3\x64\include\openssl -Destination .\include
+          msbuild .\solutions\windows-vs2022\GWSockets.sln /m /p:Configuration=Release /p:Platform=x64
+          Move-Item -Path .\include\openssl -Destination .\openssl\openssl-3\x64\include
+  
+          Move-Item -Path .\openssl\openssl-3\x86\include\openssl -Destination .\include
+          msbuild .\solutions\windows-vs2022\GWSockets.sln /m /p:Configuration=Release /p:Platform=Win32
+          Move-Item -Path .\include\openssl -Destination .\openssl\openssl-3\x86\include
+      - name: Upload release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          tag_name: ${{ needs.create_release.outputs.tag-name }}
+          fail_on_unmatched_files: true
+          files: "out/**/*.dll"
+
+  build_linux:
+    needs: [create_release]
+    runs-on: ubuntu-latest
+    env:
+      PREMAKE5_URL: https://github.com/danielga/garrysmod_common/releases/download/premake-build%2F5.0.0-beta2/premake-5.0.0-beta2-linux.tar.gz
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build
+        run: |
+          set -ex
+
+          sudo apt-get -y install ppa-purge
+          sudo ppa-purge -y ppa:ubuntu-toolchain-r/test
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get -y install gcc-multilib g++-multilib libssl-dev libboost-dev libboost-system-dev libssl-dev:i386 libboost-dev:i386 libboost-system-dev:i386
+
+          wget "${PREMAKE5_URL}" -O /tmp/premake.tar.gz
+          sudo tar -xzf /tmp/premake.tar.gz -C /usr/local/bin
+
+          premake5 --file=BuildProjects.lua --os=linux gmake
+          cd solutions/linux-gmake
+          gmake config=release_x86_64 -j$(nproc)
+          gmake config=release_x86 -j$(nproc)
+      - name: Upload release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          tag_name: ${{ needs.create_release.outputs.tag-name }}
+          fail_on_unmatched_files: true
+          files: "out/**/*.dll"
+
+  build_macos:
+    needs: [create_release]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build
+        env:
+          AR:
+        run: |
+          set -ex
+
+          export HOMEBREW_ROOT="$(brew --prefix)"
+          brew install premake make openssl boost
+
+          ln -sf "${HOMEBREW_ROOT}/opt/openssl/include/openssl" "${HOMEBREW_ROOT}/opt/boost/include/boost" include
+
+          mkdir -p lib64/macosx
+          ln -sf "${HOMEBREW_ROOT}/opt/openssl/lib/"* "${HOMEBREW_ROOT}/opt/boost/lib/"* lib64/macosx
+
+          premake5 --file=BuildProjects.lua --os=macosx gmake
+          cd solutions/macosx-gmake
+          gmake config=release_x86_64 -j$(sysctl -n hw.ncpu)
+      - name: Upload release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          tag_name: ${{ needs.create_release.outputs.tag-name }}
+          fail_on_unmatched_files: true
+          files: "out/**/*.dll"
