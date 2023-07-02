@@ -118,7 +118,7 @@ jobs:
 
           premake5 --file=BuildProjects.lua --os=macosx gmake
           cd solutions/macosx-gmake
-          gmake config=release_x86_64 -j$(sysctl -n hw.ncpu)
+          gmake config=release_x86_64 -j$(sysctl -n hw.logicalcpu)
       - name: Upload release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/v')
