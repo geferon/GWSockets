@@ -28,6 +28,9 @@ jobs:
         uses: microsoft/setup-msbuild@v2
       - name: Build
         run: |
+          $ErrorActionPreference = 'Stop'
+          Set-PSDebug -Trace 1
+
           mkdir .\openssl
           mkdir .\lib\windows
           mkdir .\lib64\windows
@@ -45,8 +48,8 @@ jobs:
           Move-Item -Path .\openssl\openssl-3\x86\lib\*.lib -Destination .\lib\windows
           Move-Item -Path .\openssl\openssl-3\x64\lib\*.lib -Destination .\lib64\windows
           Move-Item -Path C:\local\boost_*\boost -Destination .\include
-          Move-Item -Path C:\local\boost_*\lib32*\libboost_system-vc143-mt-s-x32-1_82.lib -Destination .\lib\windows\boost_system.lib
-          Move-Item -Path C:\local\boost_*\lib64*\libboost_system-vc143-mt-s-x64-1_82.lib -Destination .\lib64\windows\boost_system.lib
+          Move-Item -Path C:\local\boost_*\lib32*\libboost_system-vc143-mt-s-x32-*.lib -Destination .\lib\windows\boost_system.lib
+          Move-Item -Path C:\local\boost_*\lib64*\libboost_system-vc143-mt-s-x64-*.lib -Destination .\lib64\windows\boost_system.lib
 
           .\premake5 --file=BuildProjects.lua --os=windows vs2022
 
