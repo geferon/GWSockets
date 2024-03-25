@@ -19,9 +19,9 @@ jobs:
     runs-on: windows-latest
     env:
       PREMAKE5_URL: https://github.com/danielga/garrysmod_common/releases/download/premake-build%2F5.0.0-beta2/premake-5.0.0-beta2-windows.zip
-      OPENSSL_URL: https://download.firedaemon.com/FireDaemon-OpenSSL/openssl-3.1.1.zip
-      BOOST32_URL: https://downloads.sourceforge.net/project/boost/boost-binaries/1.82.0/boost_1_82_0-msvc-14.3-32.exe
-      BOOST64_URL: https://downloads.sourceforge.net/project/boost/boost-binaries/1.82.0/boost_1_82_0-msvc-14.3-64.exe
+      OPENSSL_URL: https://download.firedaemon.com/FireDaemon-OpenSSL/openssl-3.2.1.zip
+      BOOST32_URL: https://downloads.sourceforge.net/project/boost/boost-binaries/1.84.0/boost_1_84_0-msvc-14.3-32.exe
+      BOOST64_URL: https://downloads.sourceforge.net/project/boost/boost-binaries/1.84.0/boost_1_84_0-msvc-14.3-64.exe
     steps:
       - uses: actions/checkout@v4
       - name: Add msbuild to PATH
