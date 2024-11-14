@@ -100,7 +100,7 @@ protected:
 	void hostResolvedStep(const boost::system::error_code &ec, tcp::resolver::iterator it);
 	bool writing = { false };
 	std::string messageToWrite = "";
-	void doClose();
+	void doClose(std::string = "");
 	bool setDisconnectingCAS();
 	std::unordered_map<std::string, std::string> cookies;
 	std::unordered_map<std::string, std::string> headers;

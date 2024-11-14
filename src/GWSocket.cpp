@@ -26,7 +26,13 @@ namespace websocket = boost::beast::websocket;
 
 void GWSocket::onDisconnected(const boost::system::error_code & ec)
 {
-	this->doClose();
+	if (ec)
+		return this->doClose();
+
+	auto data = boost::beast::make_printable(this->readBuffer.data());
+	std::stringstream ss;
+	ss << data;
+	this->doClose(ss.str());
 }
 
 //Initiates an orderly, asynchronous shutdown of the connection
@@ -55,13 +61,13 @@ bool GWSocket::close()
 }
 
 //Closes the connection immediately and produces a disconnected message
-void GWSocket::doClose()
+void GWSocket::doClose(std::string code)
 {
 	this->closeSocket();
 	this->clearQueue();
 	this->state = STATE_DISCONNECTED;
 	this->writing = false;
-	this->messageQueue.put(GWSocketMessageIn(IN_DISCONNECTED));
+	this->messageQueue.put(GWSocketMessageIn(IN_DISCONNECTED, code));
 }
 
 //Tries to set the state to disconnecting using CAS
