@@ -27,7 +27,7 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v2
         with:
-          vs-version: '15.0'
+          vs-version: '15.9'
       - name: Build
         run: |
           $ErrorActionPreference = 'Stop'
@@ -81,8 +81,6 @@ jobs:
         run: |
           set -ex
 
-          sudo apt-get -y install ppa-purge
-          sudo ppa-purge -y ppa:ubuntu-toolchain-r/test
           sudo dpkg --add-architecture i386
           sudo apt-get update
           sudo apt-get -y install gcc-multilib g++-multilib libssl-dev libboost-dev libboost-system-dev libssl-dev:i386 libboost-dev:i386 libboost-system-dev:i386
