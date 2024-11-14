@@ -27,7 +27,7 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v2
         with:
-          vs-version: '[15.0,16.11)'
+          vs-version: '[15.0,15.9)'
       - name: Build
         run: |
           $ErrorActionPreference = 'Stop'
